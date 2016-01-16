@@ -2,6 +2,8 @@ package com.example.ttranslate;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -22,7 +24,8 @@ public class MainActivity extends Activity {
 
     protected static BluetoothHandler btHandler;
     private NumberPicker langFrom, langTo;
-    private String[] languages = new String[] {"English", "Spanish"};    
+    private String[] languages = new String[] {"English", "Spanish","German","Italian","Latin"};  
+    private String[] languageCodes = new String[] {"en","es","de","it","ja","la"};
     private int currFrom = 0, currTo = 1;
     private EditText input;
     @Override
@@ -30,8 +33,11 @@ public class MainActivity extends Activity {
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.activity_main);
 	getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-
-
+	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+	//startActivity(new Intent(getApplicationContext(), ChooseDeviceToConnectTo.class));
+	//XXX ^^ do when we add bt
+	
+	
 	setupPickers();
 
 	input = (EditText)findViewById(R.id.transInput);
@@ -110,7 +116,12 @@ public class MainActivity extends Activity {
 
     private void doTranslation() {
 
-	
-	
+
+
     }
+
+
+
+
+
 }
