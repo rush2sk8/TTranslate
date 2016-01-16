@@ -17,8 +17,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
+
 public class MainActivity extends Activity {
 
+    protected static BluetoothHandler btHandler;
     private NumberPicker langFrom, langTo;
     private String[] languages = new String[] {"English", "Spanish"};    
     private int currFrom = 0, currTo = 1;
@@ -108,7 +110,6 @@ public class MainActivity extends Activity {
 
     private void doTranslation() {
 
-	
 	
 	
     }
