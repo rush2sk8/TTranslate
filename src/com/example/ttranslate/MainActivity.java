@@ -1,9 +1,20 @@
 package com.example.ttranslate;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -14,6 +25,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.NumberPicker;
+import android.widget.Toast;
 import android.widget.NumberPicker.OnValueChangeListener;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -24,8 +36,10 @@ public class MainActivity extends Activity {
 
     protected static BluetoothHandler btHandler;
     private NumberPicker langFrom, langTo;
+
     private String[] languages = new String[] {"English", "Spanish","German","Italian","Latin"};  
     private String[] languageCodes = new String[] {"en","es","de","it","ja","la"};
+
     private int currFrom = 0, currTo = 1;
     private EditText input;
     @Override
@@ -36,8 +50,8 @@ public class MainActivity extends Activity {
 	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 	//startActivity(new Intent(getApplicationContext(), ChooseDeviceToConnectTo.class));
 	//XXX ^^ do when we add bt
-	
-	
+
+
 	setupPickers();
 
 	input = (EditText)findViewById(R.id.transInput);
@@ -115,13 +129,74 @@ public class MainActivity extends Activity {
     }
 
     private void doTranslation() {
-
-
-
+	String tttranslate = input.getText().toString();
+	String url = "http://api.mymemory.translated.net/get?q="+tttranslate+"&langpair="+languageCodes[currFrom]+"|"+languageCodes[currTo];
+	new TranslateTask(url);
     }
 
 
+    class TranslateTask extends AsyncTask<Void, Void, Void>{
 
+	private String url;
+	private String data;
+
+	public TranslateTask(String url) {
+	    this.url = url;
+	}
+
+	protected Void doInBackground(Void... params) {
+
+	    try {
+		URL url = new URL(this.url);
+
+		URLConnection connection = url.openConnection();
+		if(connection == null) {
+		    Toast.makeText(getApplicationContext(), "Yo get on the web!", Toast.LENGTH_SHORT).show();
+		    return null;
+		}
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+		data = "";
+
+		StringBuilder sBuilder = new StringBuilder();
+
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+		    sBuilder.append(line + "\n");
+		}
+
+		reader.close();
+		data = sBuilder.toString();
+
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    }
+
+
+	    return null;
+	}
+	@Override
+	protected void onPostExecute(Void result) {
+
+	    try {
+		JSONArray array = new JSONArray(data);
+
+		final String translation = array.getJSONObject(0).getString("translatedText");
+
+		runOnUiThread(new Runnable() {
+		    public void run() {
+			input.setText(translation);
+		    }
+		});
+
+	    } catch (JSONException e) {
+		e.printStackTrace();
+	    }
+
+
+	}
+
+    }
 
 
 }
