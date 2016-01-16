@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
 
 	((RelativeLayout)findViewById(R.id.background)).setOnTouchListener(new OnTouchListener() {
 
-	    @Override
+	    @Override 
 	    public boolean onTouch(View v, MotionEvent event) {
 		InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 		imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
