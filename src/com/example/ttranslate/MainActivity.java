@@ -215,54 +215,21 @@ public class MainActivity extends Activity {
 
 		    @Override
 		    public void run() {
-
-		/**	String converted = "";
-			if(data.equals("\u00ed"))
-			    data =  data.replaceAll("\u00ed", Html.fromHtml("\u00ED").toString());
-
-			if(data.equals("\u00cf"))
-			    data =    data.replaceAll("\u00c4", Html.fromHtml("\u00C4").toString());
-
-			if(data.equals("\u00e1"))
-			    data =    data.replaceAll("\u00e1", Html.fromHtml("\u00E1").toString());
-
-			if(data.equals("\u00c9"))
-			    data =    data.replaceAll("\u00c9", Html.fromHtml("\u00C9").toString());
-
-			if(data.equals("\u00e9"))
-			    data =    data.replaceAll("\u00e9", Html.fromHtml("\u00E9").toString());
-
-			if(data.equals("\u00d1"))
-			    data =    data.replaceAll("\u00d1", Html.fromHtml("\u00D1").toString());
-
-			if(data.equals("\u00f1"))
-			    data =    data.replaceAll("\u00f1", Html.fromHtml("\u00F1").toString());
-
-			if(data.equals("\u00d3"))
-			    data =    data.replaceAll("\u00d3", Html.fromHtml("\u00D3").toString());
-
-			if(data.equals("\u00f3"))
-			    data =    data.replaceAll("\u00f3", Html.fromHtml("\u00F3").toString());
-
-			if(data.equals("\u00da"))
-			    data =    data.replaceAll("\u00da", Html.fromHtml("\u00DA").toString());
-
-			if(data.equals("\u00fa"))
-			    data =    data.replaceAll("\u00fa", Html.fromHtml("\u00FA").toString());
-
-			if(data.equals("\u00bf"))
-			    data =    data.replaceAll("\u00bf", Html.fromHtml("\u00BF").toString());
-
-			if(data.equals("\u00a1"))
-			    data =    data.replaceAll("\u00a1", Html.fromHtml("\u00A1").toString());
-*/
+			data = data.replace("\\u00e1", "#1#");
+			data = data.replace("\\u00e9", "#2#");
+			data = data.replace("\\u00ed", "#3#");
+			data = data.replace("\\u00f3", "#4#");
+			data = data.replace("\\u00fa", "#5#");
+			data = data.replace("\\u00f1", "#6#");
+			data = data.replace("\\u00bf", "#7#");
+			data = data.replace("\\u00a1", "#8#");
 
 			if(currFrom!=currTo) {
-			    
+
 			    if(data.length()<lastData.length())
-			    for(int i = data.length();i<lastData.length();i++)
-				data += " ";
-			    
+				for(int i = data.length();i<lastData.length();i++)
+				    data += " ";
+
 			    trans.setText(data);
 			    btHandler.write(data);
 			    lastData = data;
