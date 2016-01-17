@@ -3,56 +3,69 @@ package com.example.ttranslate;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
-
-import org.json.JSONArray;
-import org.json.JSONException;
+import java.util.ArrayList;
+import java.util.Locale;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
+import android.text.Html;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.NumberPicker;
-import android.widget.Toast;
 import android.widget.NumberPicker.OnValueChangeListener;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
 
     protected static BluetoothHandler btHandler;
     private NumberPicker langFrom, langTo;
+    private TextView trans;
+    private Button voice;
+
+    private final int REQ_CODE_SPEECH_INPUT = 100;
 
     private String[] languages = new String[] {"English", "Spanish","German","Italian","Latin"};  
     private String[] languageCodes = new String[] {"en","es","de","it","ja","la"};
 
     private int currFrom = 0, currTo = 1;
     private EditText input;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.activity_main);
 	getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-	//startActivity(new Intent(getApplicationContext(), ChooseDeviceToConnectTo.class));
+	startActivity(new Intent(getApplicationContext(), ChooseDeviceToConnectTo.class));
 	//XXX ^^ do when we add bt
 
 
-	setupPickers();
+	init();
+
+    }
+
+    private void init() {
 
 	input = (EditText)findViewById(R.id.transInput);
 	input.setOnEditorActionListener(new OnEditorActionListener() {
@@ -60,12 +73,14 @@ public class MainActivity extends Activity {
 	    @Override
 	    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 		if (actionId == EditorInfo.IME_ACTION_DONE) {
-		    doTranslation();
+		    doTranslation(input.getText().toString());
 		    return true;
 		}
 		return false;
 	    }
 	});
+
+	trans = (TextView)findViewById(R.id.translated);
 
 	((RelativeLayout)findViewById(R.id.background)).setOnTouchListener(new OnTouchListener() {
 
@@ -76,9 +91,7 @@ public class MainActivity extends Activity {
 		return false;
 	    }
 	});
-    }
 
-    private void setupPickers() {
 	langFrom = (NumberPicker)findViewById(R.id.langFrom);
 	langFrom.setMinValue(0);
 	langFrom.setValue(currFrom);
@@ -115,6 +128,7 @@ public class MainActivity extends Activity {
 		return languages[value];
 	    }
 	});
+
 	langTo.setDisplayedValues(languages);
 	langTo.setOnValueChangedListener(new OnValueChangeListener() {
 
@@ -126,14 +140,40 @@ public class MainActivity extends Activity {
 	    }
 	});
 
+	voice = (Button)findViewById(R.id.voice);
+	voice.setOnClickListener(new OnClickListener() {
+
+	    @Override
+	    public void onClick(View v) {
+
+		getSpeechInput();
+
+
+	    }
+	});
+
     }
 
-    private void doTranslation() {
-	String tttranslate = input.getText().toString();
-	String url = "http://api.mymemory.translated.net/get?q="+tttranslate+"&langpair="+languageCodes[currFrom]+"|"+languageCodes[currTo];
-	new TranslateTask(url);
+    private void getSpeechInput() {
+	Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+	intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+		RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+	intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+	intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Say something in "+ languages[currFrom]);
+	try {
+	    startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
+	} catch (ActivityNotFoundException a) {
+	    a.printStackTrace();
+	}
+
     }
 
+    private void doTranslation(String text) {
+
+	String url = "http://api.mymemory.translated.net/get?q="+text.replaceAll(" ", "%20")+"&langpair="+languageCodes[currFrom]+"|"+languageCodes[currTo];
+	System.out.println(url);
+	new TranslateTask(url).execute(new Void[] {});
+    }
 
     class TranslateTask extends AsyncTask<Void, Void, Void>{
 
@@ -161,12 +201,69 @@ public class MainActivity extends Activity {
 		StringBuilder sBuilder = new StringBuilder();
 
 		String line = null;
-		while ((line = reader.readLine()) != null) {
+
+		while ((line = reader.readLine()) != null) 
 		    sBuilder.append(line + "\n");
-		}
 
 		reader.close();
 		data = sBuilder.toString();
+		System.out.println(data);
+
+		data = data.substring(data.indexOf("Text\":\"")+7,data.indexOf("\",\"match"));
+		runOnUiThread(new Runnable() {
+
+		    @Override
+		    public void run() {
+
+		/**	String converted = "";
+			if(data.equals("\u00ed"))
+			    data =  data.replaceAll("\u00ed", Html.fromHtml("\u00ED").toString());
+
+			if(data.equals("\u00cf"))
+			    data =    data.replaceAll("\u00c4", Html.fromHtml("\u00C4").toString());
+
+			if(data.equals("\u00e1"))
+			    data =    data.replaceAll("\u00e1", Html.fromHtml("\u00E1").toString());
+
+			if(data.equals("\u00c9"))
+			    data =    data.replaceAll("\u00c9", Html.fromHtml("\u00C9").toString());
+
+			if(data.equals("\u00e9"))
+			    data =    data.replaceAll("\u00e9", Html.fromHtml("\u00E9").toString());
+
+			if(data.equals("\u00d1"))
+			    data =    data.replaceAll("\u00d1", Html.fromHtml("\u00D1").toString());
+
+			if(data.equals("\u00f1"))
+			    data =    data.replaceAll("\u00f1", Html.fromHtml("\u00F1").toString());
+
+			if(data.equals("\u00d3"))
+			    data =    data.replaceAll("\u00d3", Html.fromHtml("\u00D3").toString());
+
+			if(data.equals("\u00f3"))
+			    data =    data.replaceAll("\u00f3", Html.fromHtml("\u00F3").toString());
+
+			if(data.equals("\u00da"))
+			    data =    data.replaceAll("\u00da", Html.fromHtml("\u00DA").toString());
+
+			if(data.equals("\u00fa"))
+			    data =    data.replaceAll("\u00fa", Html.fromHtml("\u00FA").toString());
+
+			if(data.equals("\u00bf"))
+			    data =    data.replaceAll("\u00bf", Html.fromHtml("\u00BF").toString());
+
+			if(data.equals("\u00a1"))
+			    data =    data.replaceAll("\u00a1", Html.fromHtml("\u00A1").toString());
+*/
+
+			if(currFrom!=currTo) {
+			    trans.setText(data);
+			    btHandler.write(data);
+			}
+			else
+			    Toast.makeText(getBaseContext(), "Please Choose 2 distinct languages", Toast.LENGTH_SHORT).show();
+		    }
+		});
 
 	    } catch (IOException e) {
 		e.printStackTrace();
@@ -175,28 +272,30 @@ public class MainActivity extends Activity {
 
 	    return null;
 	}
-	@Override
-	protected void onPostExecute(Void result) {
 
-	    try {
-		JSONArray array = new JSONArray(data);
 
-		final String translation = array.getJSONObject(0).getString("translatedText");
+    }
 
-		runOnUiThread(new Runnable() {
-		    public void run() {
-			input.setText(translation);
-		    }
-		});
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-	    } catch (JSONException e) {
-		e.printStackTrace();
+	super.onActivityResult(requestCode, resultCode, data);
+
+	switch (requestCode) {
+	case REQ_CODE_SPEECH_INPUT: {
+	    if (resultCode == RESULT_OK && null != data) {
+
+		ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+		String bestMatch = result.get(0);
+		System.out.println(bestMatch);
+
+		doTranslation(bestMatch);
+
 	    }
-
+	    break;
+	}
 
 	}
 
     }
-
-
 }
