@@ -50,6 +50,7 @@ public class MainActivity extends Activity {
 
     private int currFrom = 0, currTo = 1;
     private EditText input;
+    private String lastData = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -257,8 +258,14 @@ public class MainActivity extends Activity {
 */
 
 			if(currFrom!=currTo) {
+			    
+			    if(data.length()<lastData.length())
+			    for(int i = data.length();i<lastData.length();i++)
+				data += " ";
+			    
 			    trans.setText(data);
 			    btHandler.write(data);
+			    lastData = data;
 			}
 			else
 			    Toast.makeText(getBaseContext(), "Please Choose 2 distinct languages", Toast.LENGTH_SHORT).show();
